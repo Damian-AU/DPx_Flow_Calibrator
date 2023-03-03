@@ -1,6 +1,7 @@
 ### By Damian Brakel ###
 set plugin_name "DPx_Flow_Calibrator"
 
+set ::FC_step_number 1
 set ::FC_step1_instructions [translate "Fit a portafilter with 0.3mm calibration basket to the machine\r Then tap the Activate Test Mode button below"]
 set ::FC_step2_instructions [translate "Test mode is active\rStart the test by tapping the Espresso button\ron the group head controller\r(stay on this page)"]
 set ::FC_step2a_instructions [translate "Test mode is active\rTap the Start Profile button below to run the test"]
@@ -24,7 +25,7 @@ If you have questions, please tag me in a post on Diaspora, incluse a screen sho
 
 " ]
 
-set ::FC_number_of_samples 20
+set ::FC_number_of_samples 10
 set ::FC_max_pressure_variation 0.70
 set ::FC_max_flow_variation 0.30
 set ::FC_max_weight_variation 0.30
@@ -33,7 +34,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description ""
-    variable version 1.0.0
+    variable version 1.1.0
     variable min_de1app_version {1.40.1}
 
     proc build_ui {} {
@@ -185,8 +186,8 @@ namespace eval ::plugins::${plugin_name} {
         -label [translate "Shortcut to Flow Calibrator"] -label_font Helv_6 -label_fill #FFA500 -label_pos {0.5 0.9} \
         -command {page_to_show_when_off DPx_Flow_Calibrator}
     }
-    if {$::settings(skin) == "Insight"} {
-        dui add dbutton off 2030 700 -bwidth 520 -bheight 240 -tags FC_shortcutI \
+    if {$::settings(skin) == "Insight" || $::settings(skin) == "Insight Dark"} {
+        dui add dbutton off 2030 700 -bwidth 520 -bheight 240 -tags FC_shortcut_button \
         -shape outline -width 3 -outline #FFA500 -initial_state normal \
         -label [translate "Shortcut to Flow Calibrator"] -label_font Helv_6 -label_fill #FFA500 -label_pos {0.5 0.9} \
         -command {page_to_show_when_off DPx_Flow_Calibrator}
