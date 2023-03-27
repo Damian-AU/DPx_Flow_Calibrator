@@ -2,28 +2,27 @@
 set plugin_name "DPx_Flow_Calibrator"
 
 set ::FC_step_number 1
-set ::FC_step1_instructions [translate "Fit a portafilter with 0.3mm calibration basket to the machine\r Then tap the Activate Test Mode button below"]
-set ::FC_step2_instructions [translate "Test mode is active\rStart the test by tapping the Espresso button\ron the group head controller\r(stay on this page)"]
-set ::FC_step2a_instructions [translate "Test mode is active\rTap the Start Profile button below to run the test"]
-set ::FC_step3_instructions [translate "Update Flow Calibration via the button on the lower right\ror\rRun more tests to give a multiple test average"]
+set ::FC_step1_instructions [translate "Fit a portafilter with 0.3mm calibration basket to the machine. Then tap the Activate Test Mode button below"]
+set ::FC_step2_instructions [translate "Test mode is active. Start the test by tapping the Espresso button on the group head controller. (stay on this page)"]
+set ::FC_step2a_instructions [translate "Test mode is active. Tap the Start Profile button below to run the test"]
+set ::FC_step3_instructions [translate "Update Flow Calibration via the button on the lower right. Or run more tests to give a multiple test average"]
 set ::FC_error_message [translate "Error! Your results can NOT save"]
 set ::FC_error_message_time [translate "Error! Test was too short"]
 set ::FC_error_message_pressure [translate "Error! The pressure curve was not flat enough"]
 set ::FC_error_message_flow [translate "Error! The flow curve was not flat enough"]
 set ::FC_error_message_weight [translate "Error! The weight curve was not flat enough"]
 set ::FC_saved_message [translate "Flow calibration has been Updated, please EXIT"]
-set ::FC_shortcut_text [translate " turns on/off a shortcut to this page"]
+set ::FC_shortcut_text [translate "turns on/off a shortcut to this page"]
+set ::FC_exit_button_description [translate "The Exit button will unload test settings and clear all test data"]
 
-set ::CF_Info [translate "
-- The test requires a bluetooth scale connection. Esure it's graph is smooth and not picking up machine vibration.
-- It is important that the pressure reading is calibrated for accurate flow, I recommend calibrating pressure at 9 bar.
-- The test monitors pressure, flow and weight curves and will show an error if the data is not smooth enough.
-- The test will not allow a setting < 0.5 or > 1.65. If this occurs, check interference and/or the pressure calibration.
-- The pumps flow changes slightly with excessive run time. If testing a lot, consider resting for a < 50% duty cycle.
+set ::FC_Info_1 [translate "The test requires a bluetooth scale connection. Ensure it's graph is smooth and not picking up machine vibration."]
+set ::FC_Info_2 [translate "It is important that the pressure reading is calibrated for accurate flow, I recommend calibrating pressure at 9 bar."]
+set ::FC_Info_3 [translate "The test monitors pressure, flow and weight curves and will show an error if the data is not smooth enough."]
+set ::FC_Info_4 [translate "The test will not allow a setting < 0.5 or > 1.65. If this occurs, check interference and/or the pressure calibration."]
+set ::FC_Info_5 [translate "The pumps flow changes slightly with excessive run time. If testing a lot, consider resting for a < 50% duty cycle."]
+set ::FC_Info_6 [translate "If you have questions, please tag me in a post on Diaspora, include a screen shot of the calibration page."]
 
-If you have questions, please tag me in a post on Diaspora, incluse a screen shot of the calibration page.
-
-" ]
+set ::FC_Info "- $::FC_Info_1 \r- $::FC_Info_2 \r- $::FC_Info_3 \r- $::FC_Info_4 \r- $::FC_Info_5 \r\r $::FC_Info_6"
 
 set ::FC_number_of_samples 10
 set ::FC_max_pressure_variation 0.70
@@ -34,7 +33,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description ""
-    variable version 1.1.0
+    variable version 1.2.0
     variable min_de1app_version {1.40.1}
 
     proc build_ui {} {
@@ -75,14 +74,14 @@ namespace eval ::plugins::${plugin_name} {
             -shape round -fill #c1c5e4 \
             -label [translate "Exit"] -label_font Helv_10_bold -label_fill #fAfBff -label_pos {0.5 0.5} \
             -command {if {$::settings(skin) == "DSx"} {restore_DSx_live_graph}; set_next_page off off; dui page load off; ::plugins::DPx_Flow_Calibrator::unload_DPx_Flow_Calibrator_test; ::plugins::DPx_Flow_Calibrator::check_FC_step; set ::FC_message ""; set ::FC_test_count 0; set ::FC_settings_updated 0; ::plugins::DPx_Flow_Calibrator::FC_calibrate}
-        dui add dtext $page_name 1280 1400 -text [translate "The Exit button will unload test setting and clear all test data"] -font Helv_8 -fill $font_colour -anchor "center" -justify "center"
+        dui add dtext $page_name 1280 1400 -text $::FC_exit_button_description -font Helv_8 -fill $font_colour -anchor "center" -justify "center"
 
 
         # Headline
         #dui add dtext $page_name 1280 300 -text [translate "Flow Calibrator"] -font Helv_20_bold -fill $font_colour -anchor "center" -justify "center"
         dui add variable $page_name 2500 1540 -font Helv_8 -fill $font_colour -anchor e -justify right -textvariable {Version $::plugins::DPx_Flow_Calibrator::version  by $::plugins::DPx_Flow_Calibrator::author}
 
-        dui add variable $page_name 900 450 -font Helv_10 -fill $font_colour -anchor n -justify center -textvariable {$::FC_step_info}
+        dui add variable $page_name 900 450 -font Helv_10 -fill $font_colour -anchor n -justify center -width 1300 -textvariable {$::FC_step_info}
         dui add variable $page_name 900 1100 -font Helv_12_bold -fill #ff9421 -anchor center -justify center -tags FC_message -textvariable {$::FC_message}
 
         dui add variable $page_name 2000 450 -font Helv_9_bold -fill $font_colour -anchor center -justify center -textvariable {Last Test Data}
@@ -103,11 +102,11 @@ namespace eval ::plugins::${plugin_name} {
         dui add variable $page_name 2000 820 -font Helv_9_bold -fill $font_colour -anchor center -justify center -textvariable {Flow Calibration Setting}
         dui add variable $page_name 1700 850 -font Helv_9 -fill $font_colour -textvariable {Current setting   $::settings(calibration_flow_multiplier)}
         dui add variable $page_name 1700 900 -font Helv_9 -fill $font_colour -textvariable {Suggested setting   [::plugins::DPx_Flow_Calibrator::FC_flow_cal_suggestion]}
-        dui add variable $page_name 320 1490 -font Helv_8 -fill #FFA500 -textvariable {<< $::FC_shortcut_text}
+        dui add variable $page_name 320 1490 -font Helv_8 -fill #FFA500 -textvariable {<<  $::FC_shortcut_text}
 
         dui add dbutton $page_name 650 800 \
             -bwidth 520 -bheight 150 -tags FC_ready_button \
-            -label [translate "Activate\rTest Mode"] -label_font Helv_10_bold -label_fill $button_label_colour -label_pos {0.5 0.5} \
+            -label [translate "Activate"]\r[translate "Test Mode"] -label_font Helv_10_bold -label_fill $button_label_colour -label_pos {0.5 0.5} \
             -shape outline -width $button_outline_width -outline $button_outline_colour \
             -command {::plugins::DPx_Flow_Calibrator::load_DPx_Flow_Calibrator_test; ::plugins::DPx_Flow_Calibrator::check_FC_step; set ::FC_test_count 0}
         if {$::settings(ghc_is_installed) == 0} {
@@ -119,13 +118,13 @@ namespace eval ::plugins::${plugin_name} {
         }
         dui add dbutton $page_name 1740 1000 \
             -bwidth 520 -bheight 150 -tags FC_set_calibration_button -initial_state hidden \
-            -label [translate "Update Flow\rCalibration"] -label_font Helv_10_bold -label_fill $button_label_colour -label_pos {0.5 0.5} \
+            -label [translate "Update Flow"]\r[translate "Calibration"] -label_font Helv_10_bold -label_fill $button_label_colour -label_pos {0.5 0.5} \
             -shape outline -width $button_outline_width -outline $button_outline_colour \
             -command {::plugins::DPx_Flow_Calibrator::FC_update_settings}
         if {$::settings(DamiansFlowCalibratorShortcut) == 1} {
-            set ::FC_shortcut_switch_lable [translate "Shortcut\rON"]
+            set ::FC_shortcut_switch_lable [translate "Shortcut"]\r[translate "ON"]
         } else {
-            set ::FC_shortcut_switch_lable [translate "Shortcut\rOFF"]
+            set ::FC_shortcut_switch_lable [translate "Shortcut"]\r[translate "OFF"]
         }
         dui add dbutton $page_name 20 1440 \
             -bwidth 240 -bheight 140 -tags FC_shortcut_switch \
@@ -134,17 +133,16 @@ namespace eval ::plugins::${plugin_name} {
             -command {
                 if {$::settings(DamiansFlowCalibratorShortcut) == 1} {
                     set ::settings(DamiansFlowCalibratorShortcut) 0
-                    set ::FC_shortcut_switch_lable [translate "Shortcut\rOFF"]
+                    set ::FC_shortcut_switch_lable [translate "Shortcut"]\r[translate "OFF"]
                     dui item config off FC_shortcut_button* -initial_state hidden
                     save_settings
                 } else {
                     set ::settings(DamiansFlowCalibratorShortcut) 1
-                    set ::FC_shortcut_switch_lable [translate "Shortcut\rON"]
+                    set ::FC_shortcut_switch_lable [translate "Shortcut"]\r[translate "ON"]
                     dui item config off FC_shortcut_button* -initial_state normal
                     save_settings
                 }
             }
-
 
         dui add dbutton $page_name 800 200 \
             -bwidth 960 -bheight 200 -initial_state normal \
@@ -155,7 +153,7 @@ namespace eval ::plugins::${plugin_name} {
         dui add dbutton $page_name 180 400 \
             -bwidth 2200 -bheight 800 -tags FC_info_popup -initial_state hidden \
             -label "\uf00d" -label_font [dui font get "Font Awesome 5 Pro-Regular-400" 20] -label_fill $button_label_colour -label_pos {0.97 0.1} \
-            -label1 $::CF_Info -label1_font Helv_8 -label1_anchor w -label1_justify left -label1_fill $button_label_colour -label1_pos {0.02 0.5} \
+            -label1 $::FC_Info -label1_font Helv_8 -label1_anchor w -label1_justify left -label1_width 2150 -label1_fill $button_label_colour -label1_pos {0.02 0.5} \
             -shape round -fill #fff9C4
 
         dui add dbutton $page_name 0 0 \
