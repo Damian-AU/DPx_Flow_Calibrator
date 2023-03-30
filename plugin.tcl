@@ -18,7 +18,7 @@ set ::FC_exit_button_description [translate "The Exit button will unload test se
 set ::FC_Info_1 [translate "The test requires a bluetooth scale connection. Ensure it's graph is smooth and not picking up machine vibration."]
 set ::FC_Info_2 [translate "It is important that the pressure reading is calibrated for accurate flow, I recommend calibrating pressure at 9 bar."]
 set ::FC_Info_3 [translate "The test monitors pressure, flow and weight curves and will show an error if the data is not smooth enough."]
-set ::FC_Info_4 [translate "The test will not allow a setting < 0.5 or > 1.65. If this occurs, check interference and/or the pressure calibration."]
+set ::FC_Info_4 [translate "The test will not allow a setting < 0.3 or > 1.65. If this occurs, check interference and/or the pressure calibration."]
 set ::FC_Info_5 [translate "The pumps flow changes slightly with excessive run time. If testing a lot, consider resting for a < 50% duty cycle."]
 set ::FC_Info_6 [translate "If you have questions, please tag me in a post on Diaspora, include a screen shot of the calibration page."]
 
@@ -33,7 +33,7 @@ namespace eval ::plugins::${plugin_name} {
     variable author "Damian Brakel"
     variable contact "via Diaspora"
     variable description ""
-    variable version 1.2.0
+    variable version 1.2.1
     variable min_de1app_version {1.40.1}
 
     proc build_ui {} {
@@ -359,7 +359,7 @@ namespace eval ::plugins::${plugin_name} {
     }
 
     proc FC_update_settings {} {
-        if {[FC_flow_cal_suggestion] < 0.5 || [FC_flow_cal_suggestion] > 1.65} {
+        if {[FC_flow_cal_suggestion] < 0.3 || [FC_flow_cal_suggestion] > 1.65} {
             dui item config DPx_Flow_Calibrator FC_message -fill #ff574a
             set ::FC_message $::FC_error_message
             after 4000 {set ::FC_message ""}
@@ -462,7 +462,7 @@ namespace eval ::plugins::${plugin_name} {
         set flow_err_factor [expr ($::FC_average_test_weight / $::FC_average_test_flow)]
         set past_flow_multi $::settings(calibration_flow_multiplier)
         set suggested [round_to_two_digits [expr ($past_flow_multi * $flow_err_factor)]]
-        if {$suggested < 0.5 || $suggested > 1.65 || $::FC_settings_updated == 1} {
+        if {$suggested < 0.3 || $suggested > 1.65 || $::FC_settings_updated == 1} {
             return n/a
         } else {
             return $suggested
